@@ -152,11 +152,13 @@ function metadmin.CreateData(sid)
 	metadmin.players[sid].icons = {}
 	metadmin.players[sid].rights = {}
 
-	local q = db:prepare("INSERT INTO `ma_players` (`SID`,`group`,`status`,`nick`) VALUES (?,?,?,?)")
+	local q = db:prepare("INSERT INTO `ma_players` (`SID`,`group`,`status`,`nick`,`synch`,`synchgroup`) VALUES (?,?,?,?,?,?)")
+	local synch = 0
 	q.onSuccess = function()
 		if metadmin.synch then
 			metadmin.OnOffSynch(sid,1)
 			metadmin.GetDataSID(sid)
+			synch = 1
 		else
 			http.Post("https://api.metrostroi.net/user",{SID=sid,online=(online and "1" or "0"),unique_id=metadmin.unique_id},function(body,len,headers,code)
 				if code ~= 200 then return end
@@ -176,6 +178,8 @@ function metadmin.CreateData(sid)
 	q:setString(2,group)
 	q:setString(3,status)
 	q:setString(4,nick)
+	q:setNumber(5,synch)
+	q:setString(6,"")
 	q:start()
 end
 
