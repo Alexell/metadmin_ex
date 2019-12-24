@@ -279,6 +279,8 @@ metadmin.Permissions = {
 	["ma.synch"] = "Включение/выключение синхронизации игрока с сайтом.\nEnable/Disable player web-sync.",
 	["ma.refsynch"] = "Обновить данные игрока с сайта.\nUpdate player data from web DB.",
 	["ma.viewtrains"] = "Просмотр доступных для вождения составов.\nView trains available for drive.",
+	["ma.hideviols"] = "Право на нарушения без уведомлений.",
+	["ma.plombbroke"] = "Право на срыв пломб.",
 	["ulx pr"] = "Профиль игрока.\nPlayer profile.",
 	["ulx prid"] = "Профиль игрока.\nPlayer profile. (SID)",
 	["ulx setrank"] = "Установка ранга.\nSet rank.",
@@ -360,6 +362,7 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 	if ply.pasred then
 		ply.pasred = nil
 	else
+		if (ULib.ucl.query(ply,"ma.hideviols")) then return true end
 		local signame = arsback.Name
 		if not signame then return end
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.denial_signal_violation",ply:Nick(),signame})
@@ -375,21 +378,27 @@ end)
 
 hook.Add("MetrostroiPlombBroken", "MetAdmin", function(train,but,ply)
 	if not IsValid(train) or not IsValid(ply) then return end
-	if metadmin.plombs and metadmin.plombs[but] then
-		local plomb = metadmin.plombs[but]
-		if ply.plombs[but] then
-			ply.plombs[but] = nil
-			metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer",ply:Nick(),plomb})
-			metadmin.Log(ply:Nick().." broken seal \""..plomb.."\".")
-		else
-			metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer_without",ply:Nick(),plomb})
-			metadmin.Log(ply:Nick().." broken seal \""..plomb.."\" without dispatcher approvement.")
-			metadmin.AddViolation(ply:SteamID(),nil,"Cорвал пломбу с \""..plomb.."\" без разрешения диспетчера.\nBroken seal \""..plomb.."\" without dispatcher approvement.")
-			metadmin.GetViolations(ply:SteamID(), function(data)
-				metadmin.players[ply:SteamID()].localviolations = data
-			end)
+	if (ULib.ucl.query(ply,"ma.hideviols")) then return true end
+	if (ULib.ucl.query(ply,"ma.plombbroke")) then
+		if metadmin.plombs and metadmin.plombs[but] then
+			local plomb = metadmin.plombs[but]
+			if ply.plombs[but] then
+				ply.plombs[but] = nil
+				metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer",ply:Nick(),plomb})
+				metadmin.Log(ply:Nick().." broken seal \""..plomb.."\".")
+			else
+				metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer_without",ply:Nick(),plomb})
+				metadmin.Log(ply:Nick().." broken seal \""..plomb.."\" without dispatcher approvement.")
+				metadmin.AddViolation(ply:SteamID(),nil,"Cорвал пломбу с \""..plomb.."\" без разрешения диспетчера.")
+				metadmin.GetViolations(ply:SteamID(), function(data)
+					metadmin.players[ply:SteamID()].localviolations = data
+				end)
+			end
+			return true
 		end
-		return true
+	else
+		ply:ChatPrint("Вам запрещено срывать пломбы!")
+		return true,true
 	end
 end)
 
