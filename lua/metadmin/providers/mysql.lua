@@ -2,50 +2,50 @@ require("mysqloo") -- https://github.com/FredyH/MySQLOO
 local db = mysqloo.connect(metadmin.mysql.host, metadmin.mysql.user, metadmin.mysql.pass, metadmin.mysql.database, metadmin.mysql.port)
 
 local start = [[CREATE TABLE IF NOT EXISTS `ma_answers` (
-  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `SID` varchar(20) NOT NULL,
-  `date` int(11) NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `SID` VARCHAR(25) NOT NULL,
+  `date` INT(11) NOT NULL,
   `questions` INT(11) NOT NULL,
-  `status` int(11) NOT NULL DEFAULT '0',
-  `answers` text NOT NULL,
-  `time` int(11) NOT NULL,
-  `admin` text NOT NULL,
-  `ssadmin` text NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `status` INT(11) NOT NULL DEFAULT '0',
+  `answers` TEXT NOT NULL,
+  `time` INT(11) NOT NULL,
+  `admin` TEXT NOT NULL,
+  `ssadmin` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE IF NOT EXISTS `ma_examinfo` (
-  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `SID` varchar(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `rank` text NOT NULL,
-  `examiner` text NOT NULL,
-  `note` text NOT NULL,
-  `type` int(11) NOT NULL,
-  `server` text NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `SID` VARCHAR(25) NOT NULL,
+  `date` INT(11) NOT NULL,
+  `rank` TEXT NOT NULL,
+  `examiner` TEXT NOT NULL,
+  `note` TEXT NOT NULL,
+  `type` INT(11) NOT NULL,
+  `server` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE IF NOT EXISTS `ma_players` (
-  `SID` varchar(20) NOT NULL,
-  `group` text NOT NULL,
-  `status` text NOT NULL,
-  `nick` text NOT NULL,
-  `synch` tinyint(1) NOT NULL,
-  `synchgroup` text NOT NULL,
+  `SID` VARCHAR(25) NOT NULL,
+  `group` TEXT NOT NULL,
+  `status` TEXT NOT NULL,
+  `nick` TEXT NOT NULL,
+  `synch` TINYINT(1) NOT NULL,
+  `synchgroup` TEXT NOT NULL,
   UNIQUE KEY `SID` (`SID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE IF NOT EXISTS `ma_questions` (
-  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `name` text NOT NULL,
-  `questions` text NOT NULL,
-  `timelimit` int(11) NOT NULL DEFAULT '0',
-  `enabled` int(1) NOT NULL DEFAULT '0'
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `name` TEXT NOT NULL,
+  `questions` TEXT NOT NULL,
+  `timelimit` INT(11) NOT NULL DEFAULT '0',
+  `enabled` INT(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE IF NOT EXISTS `ma_violations` (
-  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `SID` varchar(20) NOT NULL,
-  `date` int(11) NOT NULL,
-  `admin` text NOT NULL,
-  `server` text NOT NULL,
-  `violation` text NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  `id` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `SID` VARCHAR(25) NOT NULL,
+  `date` INT(11) NOT NULL,
+  `admin` TEXT NOT NULL,
+  `server` TEXT NOT NULL,
+  `violation` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ]]
 
 local function OnError(_, err, sql)
