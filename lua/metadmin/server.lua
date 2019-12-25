@@ -279,8 +279,8 @@ metadmin.Permissions = {
 	["ma.synch"] = "Включение/выключение синхронизации игрока с сайтом.\nEnable/Disable player web-sync.",
 	["ma.refsynch"] = "Обновить данные игрока с сайта.\nUpdate player data from web DB.",
 	["ma.viewtrains"] = "Просмотр доступных для вождения составов.\nView trains available for drive.",
-	["ma.hideviols"] = "Право на нарушения без уведомлений.\nPrivilege for 'silent' violations.",
-	["ma.plombbroke"] = "Право на срыв пломб.\nPrivilege for plomb broke.",
+	["ma.hideviols"] = "Право на нарушения без уведомлений.",
+	["ma.plombbroke"] = "Право на срыв пломб.",
 	["ulx pr"] = "Профиль игрока.\nPlayer profile.",
 	["ulx prid"] = "Профиль игрока.\nPlayer profile. (SID)",
 	["ulx setrank"] = "Установка ранга.\nSet rank.",
@@ -354,7 +354,7 @@ function metadmin.Notify(target,...)
 end
 
 function metadmin.Log(str)
-	file.Append("metadmin/log.txt","["..os.date("%X - %d/%m/%Y",os.time()).."] "..str.."\r\n")
+	file.Append("metadmin/log.txt","["..os.date("%X - %d.%m.%Y",os.time()).."] "..str.."\r\n")
 end
 
 hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
@@ -367,7 +367,7 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 		if not signame then return end
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.denial_signal_violation",ply:Nick(),signame})
 		metadmin.Log(ply:Nick().." passed denial signal "..signame.." without dispatcher approvement.")
-		metadmin.AddViolation(ply:SteamID(),nil,"Проехал запрещающий сигнал "..signame.." без разрешения диспетчера.\nPassed denial signal "..signame.." without dispatcher approvement.")
+		metadmin.AddViolation(ply:SteamID(),nil,"Проехал запрещающий сигнал "..signame.." без разрешения диспетчера.")
 		metadmin.GetViolations(ply:SteamID(), function(data)
 			metadmin.players[ply:SteamID()].localviolations = data
 		end)
@@ -385,10 +385,10 @@ hook.Add("MetrostroiPlombBroken", "MetAdmin", function(train,but,ply)
 			if ply.plombs[but] then
 				ply.plombs[but] = nil
 				metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer",ply:Nick(),plomb})
-				metadmin.Log(ply:Nick().." broken seal \""..plomb.."\".")
+				metadmin.Log(ply:Nick().." сорвал пломбу с \""..plomb.."\".")
 			else
 				metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer_without",ply:Nick(),plomb})
-				metadmin.Log(ply:Nick().." broken seal \""..plomb.."\" without dispatcher approvement.")
+				metadmin.Log(ply:Nick().." сорвал пломбу с "..plomb.." без разрешения диспетчера.")
 				metadmin.AddViolation(ply:SteamID(),nil,"Cорвал пломбу с \""..plomb.."\" без разрешения диспетчера.")
 				metadmin.GetViolations(ply:SteamID(), function(data)
 					metadmin.players[ply:SteamID()].localviolations = data
@@ -616,7 +616,7 @@ function metadmin.settalon(ply,sid,type,reason)
 			elseif metadmin.players[sid].status.nom + 1 > 3 then
 				status.nom = 1
 				if metadmin.players[sid].rank ~= "user" then
-					local reason = (ply:Nick().." ("..ply:SteamID()..") отобрал красный талон.\nУВОЛЕН!\n"..ply:Nick().." ("..ply:SteamID()..") taken red token.\nFIRED!")
+					local reason = (ply:Nick().." ("..ply:SteamID()..") забрал красный талон!")
 					local target = player.GetBySteamID(sid)
 					if target then
 						metadmin.SetUserGroup(target,"user",ply)
@@ -631,9 +631,9 @@ function metadmin.settalon(ply,sid,type,reason)
 			metadmin.players[sid].status = status
 			metadmin.SaveData(sid)
 			metadmin.Notify(ply,Color(129,207,224),{"metadmin.token_taken_succ"})
-			metadmin.Log(ply:Nick().." taken token from player "..sid)
+			metadmin.Log(ply:Nick().." забрал талон у игрока "..sid)
 			if reason then
-				metadmin.violationgive(ply,sid,"Забрал "..talons[status.nom-1].." талон.\nTaken token "..talonsen[status.nom-1]..".\n"..reason)
+				metadmin.violationgive(ply,sid,"Забрал "..talons[status.nom-1].." талон.\n"..reason)
 			end
 		else
 			if metadmin.players[sid].status.nom - 1 > 0 then
@@ -641,7 +641,7 @@ function metadmin.settalon(ply,sid,type,reason)
 				metadmin.players[sid].status.date = os.time()
 				metadmin.players[sid].status.admin = ply:SteamID()
 				metadmin.Notify(ply,Color(129,207,224),{"metadmin.token_returned_succ"})
-				metadmin.Log(ply:Nick().." returned token to player "..sid)
+				metadmin.Log(ply:Nick().." вернул талон игроку "..sid)
 				metadmin.SaveData(sid)
 				metadmin.profile(ply,sid)
 			end
@@ -864,7 +864,7 @@ function metadmin.setrank(call,sid,rank,reason)
 			end
 			if metadmin.players[sid].synch then metadmin.Notify(call,Color(129,207,224),{"metadmin.player_sync_enabled"}) return end
 			if metadmin.players[sid].rank == rank then metadmin.Notify(call,Color(129,207,224),{"metadmin.rank_equal"}) return end
-			if not reason or reason == "" then reason = "Установка ранга через команду.\nSet rank via cmd" end
+			if not reason or reason == "" then reason = "Установка ранга через команду." end
 			local nick = IsValid(call) and call:Nick() or "CONSOLE"
 			local steamid = IsValid(call) and call:SteamID() or "CONSOLE"
 			metadmin.players[sid].rank = rank
@@ -875,7 +875,7 @@ function metadmin.setrank(call,sid,rank,reason)
 				SendQuestions(target)
 			end
 			metadmin.Notify(false,Color(129,207,224),{"metadmin.player_rank_set",nick,metadmin.players[sid].nick,metadmin.ranks[rank]})
-			metadmin.Log(nick.." set rank for player "..metadmin.players[sid].nick.."|"..metadmin.ranks[rank])
+			metadmin.Log(nick.." установил ранг "..metadmin.ranks[rank].." игроку "..metadmin.players[sid].nick)
 			metadmin.AddExamInfo(sid,rank,steamid,reason,3)
 			metadmin.GetExamInfo(sid, function(data)
 				metadmin.players[sid].exam = data
