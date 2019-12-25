@@ -254,7 +254,15 @@ function metadmin.menu()
 						end
 				end
 				if HasPermission("ma.order_denial_signal") then
-					sub:AddOption(T("metadmin.Menu.restrictive_selfauto"), function()
+					sub:AddOption(T("metadmin.Menu.restrictive_semiauto"), function()
+							net.Start("metadmin.order")
+								net.WriteEntity(line.ply)
+								net.WriteBool(false)
+								net.WriteString("semiauto")
+							net.SendToServer()
+						tabs:Remove()
+					end):SetTextInset(10,0)
+					sub:AddOption(T("metadmin.Menu.restrictive_auto"), function()
 							net.Start("metadmin.order")
 								net.WriteEntity(line.ply)
 								net.WriteBool(false)

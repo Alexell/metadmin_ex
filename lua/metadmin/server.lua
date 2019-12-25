@@ -359,6 +359,29 @@ end
 
 hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 	if not IsValid(train) or not IsValid(ply) then return end
+	if ply.pasred and ply.sigtype ~= "" then
+		local signame = arsback.Name
+		if not signame then return end
+		local sigtype = ply.sigtype
+		local mistake = false
+		local s = tonumber(string.sub(signame, 1, 1),10) -- в десятичной системе
+		if s == nil then -- не число
+			if sigtype == "auto" or arsback.InvationSignal ~= true then mistake = true end
+		else -- число
+			if sigtype == "semiauto" then mistake = true end
+		end
+		if mistake == true then
+			local disp_sid = ply.disp
+			local disp = player.GetBySteamID(disp_sid) 
+			metadmin.AddViolation(disp_sid,nil,"Нарушил порядок проследования запрещающего сигнала "..signame..".")
+			metadmin.GetViolations(disp_sid, function(data)
+				metadmin.players[disp_sid].localviolations = data
+			end)
+			ply.pasred = nil
+		end
+		ply.sigtype = nil
+		ply.disp = nil
+	end
 	if ply.pasred then
 		ply.pasred = nil
 	else
@@ -550,7 +573,14 @@ net.Receive("metadmin.order", function(len, ply)
 	else
 		if not HasPermission(ply,"ma.order_denial_signal") then metadmin.Notify(ply,Color(129,207,224),{"metadmin.insufficient_permissions"}) return end
 		tar.pasred = true
-		metadmin.Notify(false,Color(129,207,224),{"metadmin.deny_signal_pass_allowed",ply:Nick(),tar:Nick()})
+		local signal_type = net.ReadString()
+		tar.sigtype = signal_type
+		tar.disp = ply:SteamID()
+		if signal_type == "semiauto" then
+			metadmin.Notify(false,Color(129,207,224),{"metadmin.deny_semiauto_pass_allowed",ply:Nick(),tar:Nick()})
+		else
+			metadmin.Notify(false,Color(129,207,224),{"metadmin.deny_auto_pass_allowed",ply:Nick(),tar:Nick()})
+		end
 		metadmin.Log(ply:Nick().." given order for "..tar:Nick().." to pass denial signal.")
 	end
 end)
