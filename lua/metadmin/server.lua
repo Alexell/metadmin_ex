@@ -377,6 +377,8 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 			metadmin.GetViolations(disp_sid, function(data)
 				metadmin.players[disp_sid].localviolations = data
 			end)
+			local msg = ("нарушил порядок проследования запрещающего сигнала "..signame..".")
+			hook.Run("MetAdminViolation","red",disp_sid,"0",disp:Nick(),msg)
 			ply.pasred = nil
 		end
 		ply.sigtype = nil
@@ -385,6 +387,7 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 	if ply.pasred then
 		ply.pasred = nil
 	else
+		hook.Run("MetAdminViolationControl",ply:SteamID(),"add") -- для телеметрии
 		local signame = arsback.Name
 		if not signame then return end
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.denial_signal_violation",ply:Nick(),signame})
@@ -393,6 +396,8 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 		metadmin.GetViolations(ply:SteamID(), function(data)
 			metadmin.players[ply:SteamID()].localviolations = data
 		end)
+		local msg = ("проехал запрещающий сигнал "..signame.." без разрешения диспетчера.")
+		hook.Run("MetAdminViolation","red",ply:SteamID(),"0",ply:Nick(),msg)
 	end
 	return true
 end)
@@ -415,6 +420,8 @@ hook.Add("MetrostroiPlombBroken", "MetAdmin", function(train,but,ply)
 				metadmin.GetViolations(ply:SteamID(), function(data)
 					metadmin.players[ply:SteamID()].localviolations = data
 				end)
+				local msg = ("сорвал пломбу с "..plomb.." без разрешения диспетчера.")
+				hook.Run("MetAdminViolation","plomb",ply:SteamID(),"0",ply:Nick(),msg)
 			end
 			return true
 		end
@@ -707,6 +714,7 @@ end
 function metadmin.violationremove(call,sid,id)
 	metadmin.Notify(call,Color(129,207,224),{"metadmin.violation_removed"})
 	metadmin.RemoveViolation(tonumber(id))
+	hook.Run("MetAdminViolationControl",sid,"del") -- для телеметрии
 	metadmin.GetViolations(sid, function(data)
 		metadmin.players[sid].localviolations = data
 		if not IsValid(call) then return end
@@ -893,6 +901,7 @@ function metadmin.setrank(call,sid,rank,reason)
 			end
 			if metadmin.players[sid].synch then metadmin.Notify(call,Color(129,207,224),{"metadmin.player_sync_enabled"}) return end
 			if metadmin.players[sid].rank == rank then metadmin.Notify(call,Color(129,207,224),{"metadmin.rank_equal"}) return end
+			local oldrank = metadmin.players[sid].rank
 			if not reason or reason == "" then reason = "Установка ранга через команду." end
 			local nick = IsValid(call) and call:Nick() or "CONSOLE"
 			local steamid = IsValid(call) and call:SteamID() or "CONSOLE"
@@ -906,6 +915,7 @@ function metadmin.setrank(call,sid,rank,reason)
 			metadmin.Notify(false,Color(129,207,224),{"metadmin.player_rank_set",nick,metadmin.players[sid].nick,metadmin.ranks[rank]})
 			metadmin.Log(nick.." установил ранг "..metadmin.ranks[rank].." игроку "..metadmin.players[sid].nick)
 			metadmin.AddExamInfo(sid,rank,steamid,reason,3)
+			hook.Run("MetAdminRankChange",sid,metadmin.GetNick(sid,sid),oldrank,rank,reason)
 			metadmin.GetExamInfo(sid, function(data)
 				metadmin.players[sid].exam = data
 			end)
@@ -932,6 +942,7 @@ function metadmin.promotion(call,sid,note)
 		local nick = metadmin.players[sid].nick
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.player_promoted",call:Nick(),nick,metadmin.ranks[newgroup]})
 		metadmin.Log(call:Nick().." promoted player "..nick.." to "..metadmin.ranks[newgroup])
+		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note)
 		metadmin.AddExamInfo(sid,newgroup,call:SteamID(),note,1)
 		metadmin.players[sid].rank = newgroup
 		metadmin.SaveData(sid)
@@ -957,6 +968,7 @@ function metadmin.demotion(call,sid,note)
 		local nick = metadmin.players[sid].nick
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.player_demoted",call:Nick(),nick,metadmin.ranks[newgroup]})
 		metadmin.Log(call:Nick().." demoted player "..nick.." to "..metadmin.ranks[newgroup])
+		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note)
 		metadmin.AddExamInfo(sid,newgroup,call:SteamID(),note,2)
 		metadmin.players[sid].rank = newgroup
 		metadmin.SaveData(sid)
