@@ -385,7 +385,6 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 	if ply.pasred then
 		ply.pasred = nil
 	else
-		if (ULib.ucl.query(ply,"ma.hideviols")) then return true end
 		local signame = arsback.Name
 		if not signame then return end
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.denial_signal_violation",ply:Nick(),signame})
