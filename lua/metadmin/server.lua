@@ -366,9 +366,9 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 		local mistake = false
 		local s = tonumber(string.sub(signame, 1, 1),10) -- в десятичной системе
 		if s == nil then -- не число
-			if sigtype == "auto" or arsback.InvationSignal ~= true then mistake = true end
+			if ((sigtype == "auto") or (not table.ToString(arsback.Lenses,"",false):find("W"))) then mistake = true end
 		else -- число
-			if sigtype == "semiauto" then mistake = true end
+			if (sigtype == "semiauto") then mistake = true end
 		end
 		if mistake == true then
 			local disp_sid = ply.disp
