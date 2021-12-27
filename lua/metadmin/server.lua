@@ -503,7 +503,6 @@ net.Receive("metadmin.action", function(len,ply)
 			end
 		end
 		if (answers_tab.ssadmin ~= "" and answers_tab.ssadmin ~= ply:SteamID()) and not HasPermission(ply,"ma.forcesetstattest") then metadmin.Notify(ply,Color(129,207,224),{"metadmin.teststatuschangedeny"}) return end
-		print(str,stat)
 		metadmin.SetStatusTest(tonumber(str),stat,ply:SteamID())
 		metadmin.GetTests(sid, function(data)
 			metadmin.players[sid].exam_answers = data
