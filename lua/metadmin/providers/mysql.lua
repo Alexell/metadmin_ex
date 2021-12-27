@@ -54,24 +54,24 @@ local function OnError(_, err, sql)
 		db:connect()
 		db:wait()
 		if db:status() ~= mysqloo.DATABASE_CONNECTED then
-			ErrorNoHalt("Переподключение не удалось.")
+			ErrorNoHalt("[MetAdmin] Reconnection failed.")
 			return
 		end
 	end
-	MsgN("MetAdmin MySQL: Error: "..err.."\n("..sql..")")
+	MsgN("[MetAdmin] MySQL Error: "..err.."\n("..sql..")")
 end
 
 function db:onConnected()
 	local utf8 = db:query("SET names 'utf8'")
 	utf8:start()
-	MsgN("MetAdmin MySQL: Connected!")
+	MsgN("[MetAdmin] MySQL connected!")
 	local q = db:query(start)
 	q.onError = OnError
 	q:start()
 end
 
 function db:onConnectionFailed(err)
-	MsgN("MetAdmin MySQL: Error: "..err)
+	MsgN("[MetAdmin] MySQL error: "..err)
 end
 
 db:connect()

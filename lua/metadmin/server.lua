@@ -354,7 +354,7 @@ function metadmin.Notify(target,...)
 end
 
 function metadmin.Log(str)
-	file.Append("metadmin/log.txt","["..os.date("%X - %d/%m/%Y",os.time()).."] "..str.."\r\n")
+	file.Append("metadmin/log.txt","["..os.date("%X - %d.%m.%Y",os.time()).."] "..str.."\r\n")
 end
 
 hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
@@ -366,7 +366,7 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 		local mistake = false
 		local s = tonumber(string.sub(signame, 1, 1),10) -- в десятичной системе
 		if s == nil then -- не число
-			if ((sigtype == "auto") or (not table.ToString(arsback.Lenses,"",false):find("W"))) then mistake = true end
+			if ((sigtype == "auto") or (not table.ToString(arsback.Lenses,"",false):find("W"))) then mistake = true end -- условие по arsback.InvationSignal отрабатывает криво
 		else -- число
 			if (sigtype == "semiauto") then mistake = true end
 		end
@@ -377,6 +377,8 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 			metadmin.GetViolations(disp_sid, function(data)
 				metadmin.players[disp_sid].localviolations = data
 			end)
+			local msg = ("нарушил порядок проследования запрещающего сигнала "..signame..".")
+			hook.Run("MetAdminViolation","red",disp_sid,"0",disp:Nick(),msg)
 			ply.pasred = nil
 		end
 		ply.sigtype = nil
@@ -385,15 +387,20 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 	if ply.pasred then
 		ply.pasred = nil
 	else
-		if (ULib.ucl.query(ply,"ma.hideviols")) then return true end
+		if not GetHostName():find("Metrostroi Simple Server") then -- заблокирован тихий проезд запрещающего на MSS даже для админов
+			if (ULib.ucl.query(ply,"ma.hideviols")) then return true end
+		end
 		local signame = arsback.Name
 		if not signame then return end
+		hook.Run("MetAdminViolationControl",ply:SteamID(),"add") -- для телеметрии MSS
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.denial_signal_violation",ply:Nick(),signame})
 		metadmin.Log(ply:Nick().." passed denial signal "..signame.." without dispatcher approvement.")
-		metadmin.AddViolation(ply:SteamID(),nil,"Проехал запрещающий сигнал "..signame.." без разрешения диспетчера.\nPassed denial signal "..signame.." without dispatcher approvement.")
+		metadmin.AddViolation(ply:SteamID(),nil,"Проехал запрещающий сигнал "..signame.." без разрешения диспетчера.")
 		metadmin.GetViolations(ply:SteamID(), function(data)
 			metadmin.players[ply:SteamID()].localviolations = data
 		end)
+		local msg = ("проехал запрещающий сигнал "..signame.." без разрешения диспетчера.")
+		hook.Run("MetAdminViolation","red",ply:SteamID(),"0",ply:Nick(),msg)
 	end
 	return true
 end)
@@ -408,14 +415,16 @@ hook.Add("MetrostroiPlombBroken", "MetAdmin", function(train,but,ply)
 			if ply.plombs[but] then
 				ply.plombs[but] = nil
 				metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer",ply:Nick(),plomb})
-				metadmin.Log(ply:Nick().." broken seal \""..plomb.."\".")
+				metadmin.Log(ply:Nick().." сорвал пломбу с \""..plomb.."\".")
 			else
 				metadmin.Notify(false,Color(129,207,224),{"metadmin.seal_broken_byplayer_without",ply:Nick(),plomb})
-				metadmin.Log(ply:Nick().." broken seal \""..plomb.."\" without dispatcher approvement.")
+				metadmin.Log(ply:Nick().." сорвал пломбу с "..plomb.." без разрешения диспетчера.")
 				metadmin.AddViolation(ply:SteamID(),nil,"Cорвал пломбу с \""..plomb.."\" без разрешения диспетчера.")
 				metadmin.GetViolations(ply:SteamID(), function(data)
 					metadmin.players[ply:SteamID()].localviolations = data
 				end)
+				local msg = ("сорвал пломбу с "..plomb.." без разрешения диспетчера.")
+				hook.Run("MetAdminViolation","plomb",ply:SteamID(),"0",ply:Nick(),msg)
 			end
 			return true
 		end
@@ -645,7 +654,7 @@ function metadmin.settalon(ply,sid,type,reason)
 			elseif metadmin.players[sid].status.nom + 1 > 3 then
 				status.nom = 1
 				if metadmin.players[sid].rank ~= "user" then
-					local reason = (ply:Nick().." ("..ply:SteamID()..") отобрал красный талон.\nУВОЛЕН!\n"..ply:Nick().." ("..ply:SteamID()..") taken red token.\nFIRED!")
+					local reason = (ply:Nick().." ("..ply:SteamID()..") забрал красный талон!")
 					local target = player.GetBySteamID(sid)
 					if target then
 						metadmin.SetUserGroup(target,"user",ply)
@@ -660,9 +669,9 @@ function metadmin.settalon(ply,sid,type,reason)
 			metadmin.players[sid].status = status
 			metadmin.SaveData(sid)
 			metadmin.Notify(ply,Color(129,207,224),{"metadmin.token_taken_succ"})
-			metadmin.Log(ply:Nick().." taken token from player "..sid)
+			metadmin.Log(ply:Nick().." забрал талон у игрока "..sid)
 			if reason then
-				metadmin.violationgive(ply,sid,"Забрал "..talons[status.nom-1].." талон.\nTaken token "..talonsen[status.nom-1]..".\n"..reason)
+				metadmin.violationgive(ply,sid,"Забрал "..talons[status.nom-1].." талон.\n"..reason)
 			end
 		else
 			if metadmin.players[sid].status.nom - 1 > 0 then
@@ -670,7 +679,7 @@ function metadmin.settalon(ply,sid,type,reason)
 				metadmin.players[sid].status.date = os.time()
 				metadmin.players[sid].status.admin = ply:SteamID()
 				metadmin.Notify(ply,Color(129,207,224),{"metadmin.token_returned_succ"})
-				metadmin.Log(ply:Nick().." returned token to player "..sid)
+				metadmin.Log(ply:Nick().." вернул талон игроку "..sid)
 				metadmin.SaveData(sid)
 				metadmin.profile(ply,sid)
 			end
@@ -707,6 +716,7 @@ end
 function metadmin.violationremove(call,sid,id)
 	metadmin.Notify(call,Color(129,207,224),{"metadmin.violation_removed"})
 	metadmin.RemoveViolation(tonumber(id))
+	hook.Run("MetAdminViolationControl",sid,"del") -- для телеметрии MSS
 	metadmin.GetViolations(sid, function(data)
 		metadmin.players[sid].localviolations = data
 		if not IsValid(call) then return end
@@ -752,7 +762,7 @@ local ProfileData = {
 		30,
 		function(sid)
 			local tab = {}
-			for k,v in pairs(metadmin.players[sid].exam_answers) do
+			for k,v in ipairs(metadmin.players[sid].exam_answers) do
 				tab[k] = {
 					id = v.id,
 					questions = v.questions,
@@ -893,7 +903,8 @@ function metadmin.setrank(call,sid,rank,reason)
 			end
 			if metadmin.players[sid].synch then metadmin.Notify(call,Color(129,207,224),{"metadmin.player_sync_enabled"}) return end
 			if metadmin.players[sid].rank == rank then metadmin.Notify(call,Color(129,207,224),{"metadmin.rank_equal"}) return end
-			if not reason or reason == "" then reason = "Установка ранга через команду.\nSet rank via cmd" end
+			local oldrank = metadmin.players[sid].rank
+			if not reason or reason == "" then reason = "Установка ранга через команду." end
 			local nick = IsValid(call) and call:Nick() or "CONSOLE"
 			local steamid = IsValid(call) and call:SteamID() or "CONSOLE"
 			metadmin.players[sid].rank = rank
@@ -904,8 +915,9 @@ function metadmin.setrank(call,sid,rank,reason)
 				SendQuestions(target)
 			end
 			metadmin.Notify(false,Color(129,207,224),{"metadmin.player_rank_set",nick,metadmin.players[sid].nick,metadmin.ranks[rank]})
-			metadmin.Log(nick.." set rank for player "..metadmin.players[sid].nick.."|"..metadmin.ranks[rank])
+			metadmin.Log(nick.." установил ранг "..metadmin.ranks[rank].." игроку "..metadmin.players[sid].nick)
 			metadmin.AddExamInfo(sid,rank,steamid,reason,3)
+			hook.Run("MetAdminRankChange",sid,metadmin.GetNick(sid,sid),oldrank,rank,reason)
 			metadmin.GetExamInfo(sid, function(data)
 				metadmin.players[sid].exam = data
 			end)
@@ -932,6 +944,7 @@ function metadmin.promotion(call,sid,note)
 		local nick = metadmin.players[sid].nick
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.player_promoted",call:Nick(),nick,metadmin.ranks[newgroup]})
 		metadmin.Log(call:Nick().." promoted player "..nick.." to "..metadmin.ranks[newgroup])
+		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note)
 		metadmin.AddExamInfo(sid,newgroup,call:SteamID(),note,1)
 		metadmin.players[sid].rank = newgroup
 		metadmin.SaveData(sid)
@@ -957,6 +970,7 @@ function metadmin.demotion(call,sid,note)
 		local nick = metadmin.players[sid].nick
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.player_demoted",call:Nick(),nick,metadmin.ranks[newgroup]})
 		metadmin.Log(call:Nick().." demoted player "..nick.." to "..metadmin.ranks[newgroup])
+		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note)
 		metadmin.AddExamInfo(sid,newgroup,call:SteamID(),note,2)
 		metadmin.players[sid].rank = newgroup
 		metadmin.SaveData(sid)
