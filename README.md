@@ -1,6 +1,6 @@
 # Metadmin Extended
 
-![Metadmin Extended](https://mss.community/images/addons/metadmin_ex.jpg)
+![Metadmin Extended](https://mss-project.org/images/addons/metadmin_ex.jpg)
 
 ### Описание
 **Metadmin** - аддон для комфортной и приближенной к реальности игры на серверах Metrostroi. Благодаря этому аддону, вы получаете намного больше информации об игроке (поведение на сервере, нарушения, общую успеваемость, ранг). Это ваша личная база данных о каждом пользователе.
