@@ -364,12 +364,13 @@ hook.Add("MetrostroiPassedRed", "MetAdmin", function(train,ply,mode,arsback)
 		if not signame then return end
 		local sigtype = ply.sigtype
 		local mistake = false
-		local s = tonumber(string.sub(signame, 1, 1),10) -- в десятичной системе
-		if s == nil then -- не число
-			if ((sigtype == "auto") or (not table.ToString(arsback.Lenses,"",false):find("W"))) then mistake = true end -- условие по arsback.InvationSignal отрабатывает криво
-		else -- число
-			if (sigtype == "semiauto") then mistake = true end
-		end
+        if sigtype == "auto" then
+            if arsback.GoodInvationSignal ~= 0 then mistake = true end
+        elseif sigtype == "semiauto" then
+            if arsback.GoodInvationSignal <= 1 or not arsback.InvationSignal then mistake = true end
+        elseif sigtype == "semiauto_nonps" then
+            if arsback.GoodInvationSignal ~= 1 then mistake = true end
+        end
 		if mistake == true then
 			local disp_sid = ply.disp
 			local disp = player.GetBySteamID(disp_sid) 
@@ -584,7 +585,9 @@ net.Receive("metadmin.order", function(len, ply)
 		local signal_type = net.ReadString()
 		tar.sigtype = signal_type
 		tar.disp = ply:SteamID()
-		if signal_type == "semiauto" then
+		if signal_type == "semiauto_nonps" then
+			metadmin.Notify(false,Color(129,207,224),{"metadmin.deny_semiauto_nonps_pass_allowed",ply:Nick(),tar:Nick()})
+		elseif signal_type == "semiauto" then
 			metadmin.Notify(false,Color(129,207,224),{"metadmin.deny_semiauto_pass_allowed",ply:Nick(),tar:Nick()})
 		else
 			metadmin.Notify(false,Color(129,207,224),{"metadmin.deny_auto_pass_allowed",ply:Nick(),tar:Nick()})
