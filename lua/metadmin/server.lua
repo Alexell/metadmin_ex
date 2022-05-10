@@ -917,7 +917,7 @@ function metadmin.setrank(call,sid,rank,reason)
 			metadmin.Notify(false,Color(129,207,224),{"metadmin.player_rank_set",nick,metadmin.players[sid].nick,metadmin.ranks[rank]})
 			metadmin.Log(nick.." установил ранг "..metadmin.ranks[rank].." игроку "..metadmin.players[sid].nick)
 			metadmin.AddExamInfo(sid,rank,steamid,reason,3)
-			hook.Run("MetAdminRankChange",sid,metadmin.GetNick(sid,sid),oldrank,rank,reason)
+			hook.Run("MetAdminRankChange",sid,metadmin.GetNick(sid,sid),oldrank,rank,reason,nick)
 			metadmin.GetExamInfo(sid, function(data)
 				metadmin.players[sid].exam = data
 			end)
@@ -944,7 +944,7 @@ function metadmin.promotion(call,sid,note)
 		local nick = metadmin.players[sid].nick
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.player_promoted",call:Nick(),nick,metadmin.ranks[newgroup]})
 		metadmin.Log(call:Nick().." promoted player "..nick.." to "..metadmin.ranks[newgroup])
-		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note)
+		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note,call:Nick())
 		metadmin.AddExamInfo(sid,newgroup,call:SteamID(),note,1)
 		metadmin.players[sid].rank = newgroup
 		metadmin.SaveData(sid)
@@ -970,7 +970,7 @@ function metadmin.demotion(call,sid,note)
 		local nick = metadmin.players[sid].nick
 		metadmin.Notify(false,Color(129,207,224),{"metadmin.player_demoted",call:Nick(),nick,metadmin.ranks[newgroup]})
 		metadmin.Log(call:Nick().." demoted player "..nick.." to "..metadmin.ranks[newgroup])
-		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note)
+		hook.Run("MetAdminRankChange",sid,nick,group,newgroup,note,call:Nick())
 		metadmin.AddExamInfo(sid,newgroup,call:SteamID(),note,2)
 		metadmin.players[sid].rank = newgroup
 		metadmin.SaveData(sid)
